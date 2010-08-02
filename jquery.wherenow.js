@@ -27,6 +27,7 @@
             var i = 0, arr = [], l;
 
             this.panel = '';
+            this.currentItem = null;
 
             if( ! coords || ! coords.lat || ! coords.lng) {
                 $.error('You must pass latitude and longitude coordinates');
@@ -54,12 +55,13 @@
                 end = lastItem.end ?
                     lastItem.end :
                     new Date(new Date(lastItem.start.valueOf())['set'+type](lastItem.start['get'+type]()+opts.duration.howMany).valueOf()),
-                currentPanel = this.panel;
+                currentPanel = this.panel,
+                currentItem = this.currentItem;
 
             // Discover the panel to use based on time and location
             function getPanel(withinBuffer, self) {
                 var now = new Date(),
-                    panel,
+                    panel, item,
                     geoPanel = function(panel) {
                         if($.isPlainObject(panel)) {
                             panel = panel[withinBuffer ? 'here' : 'there'];
@@ -73,6 +75,7 @@
                     for(i = 0, l = agenda.length; i < l; i++) {
                         if(agenda[i].start < now) {
                             panel = geoPanel(agenda[i].panel);
+                            item = agenda[i];
                             continue;
                         }
                         break;
@@ -81,6 +84,7 @@
                     panel = opts[start > now ? 'before' : 'after'];
                     panel = geoPanel(panel ? panel : opts._default);
                 }
+                currentItem = self.currentItem = item;
                 self.panel = panel;
                 return panel;
             }
@@ -92,15 +96,17 @@
                 if($.support.geolocation && instance === null) {
                     var latDiff = 99, lngDiff = 99, self = this;
                     (function getTimeAndPlace() {
-                        var suc = function(p) {
-                                latDiff = Math.abs(coords.lat-p.coords.latitude),
-                                    lngDiff = Math.abs(coords.lng-p.coords.longitude);
+                        var currentCoords = (currentItem && currentItem.coords) ? currentItem.coords : coords,
+                            suc = function(p) {
+                                latDiff = Math.abs(currentCoords.lat-p.coords.latitude),
+                                    lngDiff = Math.abs(currentCoords.lng-p.coords.longitude);
                                 t = setTimeout(getTimeAndPlace, opts.delay);
                             },
                             fail = function(e) {
                                 t = setTimeout(getTimeAndPlace, opts.delay);
                             };
                         opts.onUpdate(getPanel(latDiff+lngDiff <= opts.coordBuffer, self), currentPanel);
+                        currentPanel = self.panel;
                         navigator.geolocation.getCurrentPosition(suc, fail);
                     })();
                 }
