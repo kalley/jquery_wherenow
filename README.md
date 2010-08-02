@@ -7,6 +7,10 @@ It grew from a need for an Event app I was working on.  We wanted to display
 relevant information at specific times during an event, and it would be
 different if you were actually at the event or you just had the app.
 
+Technically speaking, you could use the "panel" names in your onUpdate function
+to do whatever you wanted to do. I'm just using that nomenclature since that is
+where all of this started.
+
 ## Example Usage ##
 
     $.whereNow({
@@ -41,4 +45,8 @@ different if you were actually at the event or you just had the app.
             end: new Date('2010-08-26 18:00:00'),
             panel: '#home'
         }
-    ]);
+    ], {
+        onUpdate: function(panel) {
+            $(panel).show();
+        }
+    });
