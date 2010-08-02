@@ -42,7 +42,7 @@
             (function() {
                 var earliest, latest;
                 for(i = 0, l = agenda.length; i < l; i++) {
-                    var end = agenda[i].end ? agenda[i].end : new Date(new Date(agenda[i].start.valueOf()).setMinutes(agenda[i].start.getMinutes()+30).valueOf());
+                    var end = agenda[i].end ? agenda[i].end : new Date(new Date(agenda[i].start.valueOf())['set'+opts.duration.type](agenda[i].start['get'+opts.duration.type]()+opts.duration.howMany).valueOf());
                     if( ! earliest || earliest > agenda[i].start) {
                         earliest = agenda[i].start;
                     }
@@ -84,12 +84,13 @@
             if(started > end && ((opts.after && ! $.isPlainObject(opts.after)) || ! $.isPlainObject(opts._default))) {
                 panel = getPanel(false);
             } else {
+                opts.onUpdate(getPanel(false));
                 if($.support.geolocation && instance === null) {
                     (function getLocation() {
                         var suc = function(p) {
                                 var latDiff = Math.abs(coords.lat-p.coords.latitude),
-                                    lngDiff = Math.abs(coords.lng-p.coords.longitude),
-                                    panel = getPanel(latDiff+lngDiff <= opts.coordBuffer);
+                                    lngDiff = Math.abs(coords.lng-p.coords.longitude);
+                                opts.onUpdate(getPanel(latDiff+lngDiff <= opts.coordBuffer));
                                 setTimeout(getLocation, opts.delay);
                             },
                             fail = function(e) {};
@@ -103,8 +104,14 @@
     // expose defaults to both $.whereNow and whereNow scopes.
     $.whereNow.defaults = whereNow.prototype.defaults = {
         _default: '#home',
+        after: null,  // home panel after all agenda items
+        before: null, // home panel before all agenda items
         coordBuffer: .002,
         delay: 3000,
+        duration: {
+            type: 'Minutes',
+            howMany: 30
+        },
         onUpdate: function(panel) {}
     };
 
