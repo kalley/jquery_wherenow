@@ -12,8 +12,8 @@
 
     $.support.geolocation = navigator.geolocation;
 
-    $.whereNow = function(coords, agenda, options) {
-        return whereNow.instance(coords, agenda, options);
+    $.whereNow = function(coords, agenda, options, resetInstance) {
+        return whereNow.instance(coords, agenda, options, resetInstance);
     };
 
     var instance = null, t,
@@ -124,8 +124,8 @@
 
     // static instance. We don't want this running more than once.
     // Can reset if needed.
-    whereNow.instance = function(coords, agenda, options, reset) {
-        if(instance === null || reset) {
+    whereNow.instance = function(coords, agenda, options, resetInstance) {
+        if(instance === null || resetInstance) {
             reset();
             instance = new whereNow(coords, agenda, options);
         }
