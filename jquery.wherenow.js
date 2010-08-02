@@ -74,12 +74,12 @@
                     panel = opts[start > now ? 'before' : 'after'];
                     panel = geoPanel(panel ? panel : opts._default);
                 }
-                return panel;
+                return this.panel = panel;
             }
 
             // If the agenda is complete and there is no location-aware state for afterwards, just get the panel.
             if(started > end && ((opts.after && ! $.isPlainObject(opts.after)) || ! $.isPlainObject(opts._default))) {
-                opts.onUpdate(this.panel = getPanel(false));
+                opts.onUpdate(getPanel(false));
             } else {
                 if($.support.geolocation && instance === null) {
                     var latDiff = 99, lngDiff = 99;
@@ -92,7 +92,7 @@
                             fail = function(e) {
                                 setTimeout(getTimeAndPlace, opts.delay);
                             };
-                        opts.onUpdate(this.panel = getPanel(latDiff+lngDiff <= opts.coordBuffer));
+                        opts.onUpdate(getPanel(latDiff+lngDiff <= opts.coordBuffer));
                         navigator.geolocation.getCurrentPosition(suc, fail);
                     })();
                 }
