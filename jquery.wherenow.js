@@ -81,19 +81,22 @@
                 return panel;
             }
 
+            // If the agenda is complete and there is no location-aware state for afterwards, just get the panel.
             if(started > end && ((opts.after && ! $.isPlainObject(opts.after)) || ! $.isPlainObject(opts._default))) {
-                panel = getPanel(false);
-            } else {
                 opts.onUpdate(getPanel(false));
+            } else {
                 if($.support.geolocation && instance === null) {
-                    (function getLocation() {
+                    var latDiff = 99, lngDiff = 99;
+                    (function getTimeAndPlace() {
                         var suc = function(p) {
-                                var latDiff = Math.abs(coords.lat-p.coords.latitude),
+                                latDiff = Math.abs(coords.lat-p.coords.latitude),
                                     lngDiff = Math.abs(coords.lng-p.coords.longitude);
-                                opts.onUpdate(getPanel(latDiff+lngDiff <= opts.coordBuffer));
-                                setTimeout(getLocation, opts.delay);
+                                setTimeout(getTimeAndPlace, opts.delay);
                             },
-                            fail = function(e) {};
+                            fail = function(e) {
+                                setTimeout(getTimeAndPlace, opts.delay);
+                            };
+                        opts.onUpdate(getPanel(latDiff+lngDiff <= opts.coordBuffer));
                         navigator.geolocation.getCurrentPosition(suc, fail);
                     })();
                 }
@@ -103,14 +106,14 @@
 
     // expose defaults to both $.whereNow and whereNow scopes.
     $.whereNow.defaults = whereNow.prototype.defaults = {
-        _default: '#home',
-        after: null,  // home panel after all agenda items
-        before: null, // home panel before all agenda items
-        coordBuffer: .002,
-        delay: 3000,
-        duration: {
-            type: 'Minutes',
-            howMany: 30
+        _default: '#home',  // default panel to fallback on
+        after: null,        // home panel after all agenda items
+        before: null,       // home panel before all agenda items
+        coordBuffer: .002,  // distance from coordinates
+        delay: 3000,        // how often to update location and time
+        duration: {         // default duration of entries in the agenda
+            type: 'Minutes',// eg, Minutes, Hours, Days, Seconds, etc.
+            howMany: 30     // Number of type to add to start time
         },
         onUpdate: function(panel) {}
     };
