@@ -46,7 +46,8 @@ where all of this started.
             panel: '#home'
         }
     ], {
-        onUpdate: function(panel) {
+        onUpdate: function(panel, old_panel) {
+            $(old_panel).hide();
             $(panel).show();
         }
     });

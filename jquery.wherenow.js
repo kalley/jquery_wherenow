@@ -86,7 +86,7 @@
 
             // If the agenda is complete and there is no location-aware state for afterwards, just get the panel.
             if(started > end && ((opts.after && ! $.isPlainObject(opts.after)) || ! $.isPlainObject(opts._default))) {
-                opts.onUpdate(getPanel(false));
+                opts.onUpdate(getPanel(false), this.panel);
             } else {
                 if($.support.geolocation && instance === null) {
                     var latDiff = 99, lngDiff = 99;
@@ -99,7 +99,7 @@
                             fail = function(e) {
                                 t = setTimeout(getTimeAndPlace, opts.delay);
                             };
-                        opts.onUpdate(getPanel(latDiff+lngDiff <= opts.coordBuffer));
+                        opts.onUpdate(getPanel(latDiff+lngDiff <= opts.coordBuffer), this.panel);
                         navigator.geolocation.getCurrentPosition(suc, fail);
                     })();
                 }
@@ -118,7 +118,7 @@
             type: 'Minutes',// eg, Minutes, Hours, Days, Seconds, etc.
             howMany: 30     // Number of type to add to start time
         },
-        onUpdate: function(panel) {}
+        onUpdate: function(panel, old_panel) {}
     };
 
     // static instance. We don't want this running more than once.
