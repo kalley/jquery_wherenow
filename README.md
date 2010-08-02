@@ -9,7 +9,7 @@ different if you were actually at the event or you just had the app.
 
 ## Example Usage ##
 
-`$.whereNow({
+``$.whereNow({
     lat: 29.7811774,
     lng: -95.5603266
 }, [
@@ -41,4 +41,4 @@ different if you were actually at the event or you just had the app.
         end: new Date('2010-08-26 18:00:00'),
         panel: '#home'
     }
-]);`
+]);``
