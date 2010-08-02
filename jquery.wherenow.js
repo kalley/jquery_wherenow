@@ -58,7 +58,7 @@
                 currentPanel = this.panel;
 
             // Discover the panel to use based on time and location
-            function getPanel(withinBuffer) {
+            function getPanel(withinBuffer, self) {
                 var now = new Date(),
                     panel,
                     geoPanel = function(panel) {
@@ -82,7 +82,8 @@
                     panel = opts[start > now ? 'before' : 'after'];
                     panel = geoPanel(panel ? panel : opts._default);
                 }
-                return this.panel = panel;
+                self.panel = panel;
+                return panel;
             }
 
             // If the agenda is complete and there is no location-aware state for afterwards, just get the panel.
@@ -90,7 +91,7 @@
                 opts.onUpdate(getPanel(false), currentPanel);
             } else {
                 if($.support.geolocation && instance === null) {
-                    var latDiff = 99, lngDiff = 99;
+                    var latDiff = 99, lngDiff = 99, self = this;
                     (function getTimeAndPlace() {
                         var suc = function(p) {
                                 latDiff = Math.abs(coords.lat-p.coords.latitude),
@@ -100,7 +101,7 @@
                             fail = function(e) {
                                 t = setTimeout(getTimeAndPlace, opts.delay);
                             };
-                        opts.onUpdate(getPanel(latDiff+lngDiff <= opts.coordBuffer), currentPanel);
+                        opts.onUpdate(getPanel(latDiff+lngDiff <= opts.coordBuffer, self), currentPanel);
                         navigator.geolocation.getCurrentPosition(suc, fail);
                     })();
                 }
