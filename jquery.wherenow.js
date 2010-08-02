@@ -16,18 +16,17 @@
         return whereNow.instance(coords, agenda, options);
     };
 
-    var instance = null,
+    var instance = null, t,
+        reset = function() {
+            clearTimeout(t);
+            t = null;
+            instance = null;
+        },
         whereNow = function(coords, agenda, options) {
 
-            var i = 0, arr = [], l, t;
+            var i = 0, arr = [], l;
 
             this.panel = '';
-
-            this.reset = function() {
-                clearTimeout(t);
-                t = null;
-                instance = null;
-            }
 
             if( ! coords || ! coords.lat || ! coords.lng) {
                 $.error('You must pass latitude and longitude coordinates');
@@ -127,7 +126,7 @@
     // Can reset if needed.
     whereNow.instance = function(coords, agenda, options, reset) {
         if(instance === null || reset) {
-            if(instance) instance.reset();
+            reset();
             instance = new whereNow(coords, agenda, options);
         }
         return instance;
