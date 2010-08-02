@@ -32,14 +32,14 @@
                 }
                 agenda = arr;
             }
-            agenda.sort(function(a, b) {
+            agenda.sort(function(a, b) { // Sort by start time
                 return a.start-b.start;
             });
 
             var opts = $.extend({}, this.defaults, options),
                 started = new Date(),
                 start, end;
-            (function() {
+            (function() { // Anonymous function that only needs to be called once to find the start and end of the agenda
                 var earliest, latest;
                 for(i = 0, l = agenda.length; i < l; i++) {
                     var end = agenda[i].end ? agenda[i].end : new Date(new Date(agenda[i].start.valueOf())['set'+opts.duration.type](agenda[i].start['get'+opts.duration.type]()+opts.duration.howMany).valueOf());
@@ -54,6 +54,7 @@
                 end = latest;
             })();
 
+            // Discover the panel to use based on time and location
             function getPanel(withinBuffer) {
                 var now = new Date(),
                     panel,
@@ -70,9 +71,9 @@
                     for(i = 0, l = agenda.length; i < l; i++) {
                         if(agenda[i].start < now) {
                             panel = geoPanel(agenda[i].panel);
-                        } else {
-                            break;
+                            continue;
                         }
+                        break;
                     }
                 } else {
                     panel = opts[start > now ? 'before' : 'after'];
@@ -127,3 +128,40 @@
     };
 
 })(jQuery, window);
+
+/* Usage example
+ * 
+$.whereNow({
+    lat: 29.7811774,
+    lng: -95.5603266
+}, [
+    {
+        start: new Date('2010-08-26 13:00:00'),
+        panel: {
+            here: '#agenda',
+            there: '#home'
+        }
+    },
+    {
+        start: new Date('2010-08-26 13:30:00'),
+        panel: '#home'
+    },
+    {
+        start: new Date('2010-08-26 14:30:00'),
+        panel: '#home'
+    },
+    {
+        start: new Date('2010-08-26 15:30:00'),
+        panel: '#home'
+    },
+    {
+        start: new Date('2010-08-26 16:30:00'),
+        panel: '#home'
+    },
+    {
+        start: new Date('2010-08-26 17:15:00'),
+        end: new Date('2010-08-26 18:00:00'),
+        panel: '#home'
+    }
+]);
+ */
