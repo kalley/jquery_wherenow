@@ -19,6 +19,8 @@
     var instance = null,
         whereNow = function(coords, agenda, options) {
 
+            this.panel = '';
+
             if( ! coords || ! coords.lat || ! coords.lng) {
                 $.error('You must pass latitude and longitude coordinates');
             }
@@ -38,8 +40,14 @@
 
             var opts = $.extend({}, this.defaults, options),
                 started = new Date(),
+                lastItem = agenda[agenda.length-1],
+                type = (function(str) {
+                    return str.charAt(0).toUpperCase()+str.substring(1);
+                })(opts.duration.type.toLowerCase()),
                 start = agenda[0].start,
-                end = agenda[agenda.length-1].end ? agenda[agenda.length-1].end : new Date(new Date(agenda[agenda.length-1].start.valueOf())['set'+opts.duration.type](agenda[agenda.length-1].start['get'+opts.duration.type]()+opts.duration.howMany).valueOf());
+                end = lastItem.end ?
+                    lastItem.end :
+                    new Date(new Date(lastItem.start.valueOf())['set'+type](lastItem.start['get'+type]()+opts.duration.howMany).valueOf());
 
             // Discover the panel to use based on time and location
             function getPanel(withinBuffer) {
@@ -71,7 +79,7 @@
 
             // If the agenda is complete and there is no location-aware state for afterwards, just get the panel.
             if(started > end && ((opts.after && ! $.isPlainObject(opts.after)) || ! $.isPlainObject(opts._default))) {
-                opts.onUpdate(getPanel(false));
+                opts.onUpdate(this.panel = getPanel(false));
             } else {
                 if($.support.geolocation && instance === null) {
                     var latDiff = 99, lngDiff = 99;
@@ -84,7 +92,7 @@
                             fail = function(e) {
                                 setTimeout(getTimeAndPlace, opts.delay);
                             };
-                        opts.onUpdate(getPanel(latDiff+lngDiff <= opts.coordBuffer));
+                        opts.onUpdate(this.panel = getPanel(latDiff+lngDiff <= opts.coordBuffer));
                         navigator.geolocation.getCurrentPosition(suc, fail);
                     })();
                 }
