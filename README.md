@@ -47,7 +47,7 @@ where all of this started.
         }
     ], {
         onUpdate: function(panel, old_panel) {
-            $(old_panel).hide();
+            if(old_panel) $(old_panel).hide();
             $(panel).show();
         }
     });

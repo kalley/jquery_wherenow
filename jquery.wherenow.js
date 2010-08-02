@@ -54,7 +54,8 @@
                 start = agenda[0].start,
                 end = lastItem.end ?
                     lastItem.end :
-                    new Date(new Date(lastItem.start.valueOf())['set'+type](lastItem.start['get'+type]()+opts.duration.howMany).valueOf());
+                    new Date(new Date(lastItem.start.valueOf())['set'+type](lastItem.start['get'+type]()+opts.duration.howMany).valueOf()),
+                currentPanel = this.panel;
 
             // Discover the panel to use based on time and location
             function getPanel(withinBuffer) {
@@ -86,7 +87,7 @@
 
             // If the agenda is complete and there is no location-aware state for afterwards, just get the panel.
             if(started > end && ((opts.after && ! $.isPlainObject(opts.after)) || ! $.isPlainObject(opts._default))) {
-                opts.onUpdate(getPanel(false), this.panel);
+                opts.onUpdate(getPanel(false), currentPanel);
             } else {
                 if($.support.geolocation && instance === null) {
                     var latDiff = 99, lngDiff = 99;
@@ -99,7 +100,7 @@
                             fail = function(e) {
                                 t = setTimeout(getTimeAndPlace, opts.delay);
                             };
-                        opts.onUpdate(getPanel(latDiff+lngDiff <= opts.coordBuffer), this.panel);
+                        opts.onUpdate(getPanel(latDiff+lngDiff <= opts.coordBuffer), currentPanel);
                         navigator.geolocation.getCurrentPosition(suc, fail);
                     })();
                 }
