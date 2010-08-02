@@ -19,12 +19,19 @@
     var instance = null,
         whereNow = function(coords, agenda, options) {
 
+            var i = 0, arr = [], l, t;
+
             this.panel = '';
+
+            this.reset = function() {
+                clearTimeout(t);
+                t = null;
+                instance = null;
+            }
 
             if( ! coords || ! coords.lat || ! coords.lng) {
                 $.error('You must pass latitude and longitude coordinates');
             }
-            var i = 0, arr = [], l;
 
             if( ! agenda) {
                 return;
@@ -87,10 +94,10 @@
                         var suc = function(p) {
                                 latDiff = Math.abs(coords.lat-p.coords.latitude),
                                     lngDiff = Math.abs(coords.lng-p.coords.longitude);
-                                setTimeout(getTimeAndPlace, opts.delay);
+                                t = setTimeout(getTimeAndPlace, opts.delay);
                             },
                             fail = function(e) {
-                                setTimeout(getTimeAndPlace, opts.delay);
+                                t = setTimeout(getTimeAndPlace, opts.delay);
                             };
                         opts.onUpdate(getPanel(latDiff+lngDiff <= opts.coordBuffer));
                         navigator.geolocation.getCurrentPosition(suc, fail);
@@ -115,8 +122,10 @@
     };
 
     // static instance. We don't want this running more than once.
-    whereNow.instance = function(coords, agenda, options) {
-        if(instance === null) {
+    // Can reset if needed.
+    whereNow.instance = function(coords, agenda, options, reset) {
+        if(instance === null || reset) {
+            if(instance) instance.reset();
             instance = new whereNow(coords, agenda, options);
         }
         return instance;
