@@ -38,21 +38,8 @@
 
             var opts = $.extend({}, this.defaults, options),
                 started = new Date(),
-                start, end;
-            (function() { // Anonymous function that only needs to be called once to find the start and end of the agenda
-                var earliest, latest;
-                for(i = 0, l = agenda.length; i < l; i++) {
-                    var end = agenda[i].end ? agenda[i].end : new Date(new Date(agenda[i].start.valueOf())['set'+opts.duration.type](agenda[i].start['get'+opts.duration.type]()+opts.duration.howMany).valueOf());
-                    if( ! earliest || earliest > agenda[i].start) {
-                        earliest = agenda[i].start;
-                    }
-                    if( ! latest || latest < end) {
-                        latest = end;
-                    }
-                }
-                start = earliest;
-                end = latest;
-            })();
+                start = agenda[0].start,
+                end = agenda[agenda.length-1].end ? agenda[agenda.length-1].end : new Date(new Date(agenda[agenda.length-1].start.valueOf())['set'+opts.duration.type](agenda[agenda.length-1].start['get'+opts.duration.type]()+opts.duration.howMany).valueOf());
 
             // Discover the panel to use based on time and location
             function getPanel(withinBuffer) {
