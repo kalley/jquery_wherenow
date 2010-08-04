@@ -16,7 +16,7 @@
         return whereNow.instance(coords, agenda, options, resetInstance);
     };
 
-    var instance = null, t,
+    var instance = null, t = null,
         reset = function() {
             clearTimeout(t);
             t = null;
@@ -31,135 +31,64 @@
         toKm = function(miles) {
             return miles*1.609344;
         },
-        withinRadius = function(location, coords, radius) {
-            var d = toKm(radius);
-            return d > toRad(Math.acos(
+        calculateDistance = function(location, coords) {
+            return toRad(Math.acos(
                     Math.sin(toRad(location.lat))*Math.sin(toRad(coords.lat))+
                     Math.cos(toRad(location.lat))*Math.cos(toRad(coords.lat))*Math.cos(toRad(location.lat-coords.lat))
                 )*60*1.1515);
         },
-        whereNow = function(coords, agenda, options) {
+        withinRadius = function(location, coords, radius) {
+            var d = toKm(radius);
+            return d > calculateDistance(location, coords);
+        },
+        whereNow = function(locations, options) {
 
-            var i = 0, arr = [], l
-                self = this;
+            var self = this,
+                opts = $.extend({}, this.defaults, options),
+                START_TIME = new Date();
 
-            this.panel = '';
-            this.currentItem = null;
-
-            this.withinBounds = false;
-
-            if( ! coords || ! coords.lat || ! coords.lng) {
-                $.error('You must pass latitude and longitude coordinates');
-            }
-
-            if( ! agenda) {
-                return;
-            } else if( ! $.isArray(agenda)) {
-                for(var p in agenda) {
-                    arr[i++] = agenda[p];
-                }
-                agenda = arr;
-            }
-            agenda.sort(function(a, b) { // Sort by start time
-                return a.start-b.start;
-            });
-
-            var opts = $.extend({}, this.defaults, options),
-                started = new Date(),
-                lastItem = agenda[agenda.length-1],
-                type = (function(str) {
-                    return str.charAt(0).toUpperCase()+str.substring(1);
-                })(opts.duration.type.toLowerCase()),
-                start = agenda[0].start,
-                end = lastItem.end ?
-                    lastItem.end :
-                    new Date(new Date(lastItem.start.valueOf())['set'+type](lastItem.start['get'+type]()+opts.duration.howMany).valueOf()),
-                currentPanel = this.panel,
-                currentItem = this.currentItem;
-
-            this.option = function(option, value) {
-                if(value) {
-                    opts[option] = value;
-                }
-                return opts[option];
-            };
-
-            // Discover the panel to use based on time and location
-            function getPanel(withinBuffer, self) {
-                var now = new Date(),
-                    panel, item,
-                    geoPanel = function(panel) {
-                        if($.isPlainObject(panel)) {
-                            panel = panel[withinBuffer ? 'here' : 'there'];
-                            if( ! panel) {
-                                panel = panel.here;
-                            }
+            (function getTimeAndPlace() {
+                var suc = function(p) {
+                        var location, timeIndex;
+                        opts.success(self, location, timeIndex);
+                        opts.complete(self);
+                        if( ! opts.stopAt || START_TIME < opts.stopAt) {
+                            t = setTimeout(getTimeAndPlace, opts.delay);
                         }
-                        return panel;
+                    },
+                    fail = function(e) {
+                        opts.error(e, self);
+                        opts.complete(self);
+                        if( ! opts.stopAt || START_TIME < opts.stopAt) {
+                            t = setTimeout(getTimeAndPlace, opts.delay);
+                        }
                     };
-                if(start < now && now < end) {
-                    for(i = 0, l = agenda.length; i < l; i++) {
-                        if(agenda[i].start < now) {
-                            panel = geoPanel(agenda[i].panel);
-                            item = agenda[i];
-                            continue;
-                        }
-                        break;
-                    }
+                if( !!navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(suc, fail);
                 } else {
-                    panel = opts[start > now ? 'before' : 'after'];
-                    panel = geoPanel(panel ? panel : opts._default);
+                    fail({code: 4, message: 'Geolocation not available'});
                 }
-                currentItem = self.currentItem = item;
-                self.panel = panel;
-                return panel;
-            }
-
-            // If the agenda is complete and there is no location-aware state for afterwards, just get the panel.
-            if(started > end && ((opts.after && ! $.isPlainObject(opts.after)) || ! $.isPlainObject(opts._default))) {
-                opts.onUpdate(getPanel(false), currentPanel, self);
-            } else {
-                if($.support.geolocation && instance === null) {
-                    var latDiff = 99, lngDiff = 99, self = this;
-                    (function getTimeAndPlace() {
-                        var currentCoords = (currentItem && currentItem.coords) ? currentItem.coords : coords,
-                            suc = function(p) {
-                                latDiff = Math.abs(currentCoords.lat-p.coords.latitude),
-                                    lngDiff = Math.abs(currentCoords.lng-p.coords.longitude);
-                                t = setTimeout(getTimeAndPlace, opts.delay);
-                            },
-                            fail = function(e) {
-                                t = setTimeout(getTimeAndPlace, opts.delay);
-                            };
-                        opts.onUpdate(getPanel(latDiff+lngDiff <= opts.coordBuffer, self), currentPanel, self);
-                        currentPanel = self.panel;
-                        navigator.geolocation.getCurrentPosition(suc, fail);
-                    })();
-                }
-            }
+            })();
 
         };
 
     // expose defaults to both $.whereNow and whereNow scopes.
     $.whereNow.defaults = whereNow.prototype.defaults = {
-        _default: '#home',  // default panel to fallback on
-        after: null,        // home panel after all agenda items
-        before: null,       // home panel before all agenda items
-        coordBuffer: .002,  // distance from coordinates
-        delay: 3000,        // how often to update location and time
-        duration: {         // default duration of entries in the agenda
-            type: 'Minutes',// eg, Minutes, Hours, Days, Seconds, etc.
-            howMany: 30     // Number of type to add to start time
-        },
-        onUpdate: function(panel, old_panel, whereNow) {}
+        radius: .25,
+        delay: 3000,
+        api: null,
+        stopAt: null,
+        complete: function(whereNow) {},
+        success: function(whereNow, location, timeIndex) {},
+        error: function(error, whereNow) {}
     };
 
     // static instance. We don't want this running more than once.
     // Can reset if needed.
-    whereNow.instance = function(coords, agenda, options, resetInstance) {
+    whereNow.instance = function(locations, options, resetInstance) {
         if(instance === null || resetInstance) {
             reset();
-            instance = new whereNow(coords, agenda, options);
+            instance = new whereNow(locations, options);
         }
         return instance;
     };
