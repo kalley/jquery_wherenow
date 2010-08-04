@@ -7,47 +7,44 @@ It grew from a need for an Event app I was working on.  We wanted to display
 relevant information at specific times during an event, and it would be
 different if you were actually at the event or you just had the app.
 
-Technically speaking, you could use the "panel" names in your onUpdate function
-to do whatever you wanted to do. I'm just using that nomenclature since that is
-where all of this started.
+The new API differs a lot from my original plan, though it definitely
+encourages and enables a greater flexibility in use.
 
 ## Example Usage ##
 
-    $.whereNow({
-        lat: 29.7811774,
-        lng: -95.5603266
-    }, [
+    var locations = [
         {
-            start: new Date('2010-08-26 13:00:00'),
-            panel: {
-                here: '#agenda',
-                there: '#home'
-            }
-        },
-        {
-            start: new Date('2010-08-26 13:30:00'),
-            panel: '#home'
-        },
-        {
-            start: new Date('2010-08-26 14:30:00'),
-            panel: '#home'
-        },
-        {
-            start: new Date('2010-08-26 15:30:00'),
-            panel: '#home'
-        },
-        {
-            start: new Date('2010-08-26 16:30:00'),
-            panel: '#home'
-        },
-        {
-            start: new Date('2010-08-26 17:15:00'),
-            end: new Date('2010-08-26 18:00:00'),
-            panel: '#home'
+            lat: 29.7811774,
+            lng: -95.5603266,
+            times: [
+                {
+                    // required
+                    start: new Date('2010-08-26 13:00:00'),
+                    // optional, and used by the plugin
+                    end: new Date('2010-08-26 14:00:00'),
+                    success: function(whereNow, coordinates) {}, // This overwrites the location success method
+                    // now, whatever else you want
+                    name: 'Session 1'
+                },
+                {
+                    start: new Date('2010-08-26 14:15:00'),
+                    end: new Date('2010-08-26 15:15:00'),
+                    name: 'Session 2'
+                }
+            ],
+            // This will be used if there is not a success method in the times object
+            success: function(whereNow, coordinates) {}
         }
-    ], {
-        onUpdate: function(panel, old_panel) {
-            if(old_panel) $(old_panel).hide();
-            $(panel).show();
-        }
+    ];
+
+    var wN = $.whereNow(locations, {
+        radius: .25, // in miles,
+        delay: 3000, // how long between checks in milliseconds,
+        api: null, // If you want to use Gears or some other geolocation api (it just needs to have a getLocation method
+        // gets called after everything is complete
+        complete: function(whereNow, location, timeIndex) {},
+        // only gets called if not defined within a specific location
+        success: function(whereNow, coordinates) {},
+        // gets called on error, with the error from the API
+        error: function(error, whereNow) {}
     });

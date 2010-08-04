@@ -22,12 +22,31 @@
             t = null;
             instance = null;
         },
+        toRad = function(deg) {
+            return deg*(Math.PI/180);
+        },
+        toDeg = function(rad) {
+            return rad*(180/Math.PI);
+        },
+        toKm = function(miles) {
+            return miles*1.609344;
+        },
+        withinRadius = function(location, coords, radius) {
+            var d = toKm(radius);
+            return d > toRad(Math.acos(
+                    Math.sin(toRad(location.lat))*Math.sin(toRad(coords.lat))+
+                    Math.cos(toRad(location.lat))*Math.cos(toRad(coords.lat))*Math.cos(toRad(location.lat-coords.lat))
+                )*60*1.1515);
+        },
         whereNow = function(coords, agenda, options) {
 
-            var i = 0, arr = [], l;
+            var i = 0, arr = [], l
+                self = this;
 
             this.panel = '';
             this.currentItem = null;
+
+            this.withinBounds = false;
 
             if( ! coords || ! coords.lat || ! coords.lng) {
                 $.error('You must pass latitude and longitude coordinates');
@@ -98,7 +117,7 @@
 
             // If the agenda is complete and there is no location-aware state for afterwards, just get the panel.
             if(started > end && ((opts.after && ! $.isPlainObject(opts.after)) || ! $.isPlainObject(opts._default))) {
-                opts.onUpdate(getPanel(false), currentPanel, this);
+                opts.onUpdate(getPanel(false), currentPanel, self);
             } else {
                 if($.support.geolocation && instance === null) {
                     var latDiff = 99, lngDiff = 99, self = this;
