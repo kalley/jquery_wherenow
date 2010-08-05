@@ -51,9 +51,9 @@ encourages and enables a greater flexibility in use.
         // Can be null, which means that it will never stop checking.
         stopAt: new Date('2010-08-26 23:00:00'),
         // gets called after everything is complete
-        complete: function(whereNow, location, timeIndex) {},
+        complete: function(whereNow) {},
         // only gets called if not defined within a specific location
-        success: function(whereNow, coordinates) {},
+        success: function(whereNow, location) {},
         // gets called on error, with the error from the API
         error: function(error, whereNow) {}
     });

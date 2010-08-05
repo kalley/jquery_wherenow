@@ -25,17 +25,17 @@
         toRad = function(deg) {
             return deg*(Math.PI/180);
         },
-        toDeg = function(rad) {
-            return rad*(180/Math.PI);
-        },
         toKm = function(miles) {
             return miles*1.609344;
         },
         calculateDistance = function(location, coords) {
-            return toRad(Math.acos(
-                    Math.sin(toRad(location.lat))*Math.sin(toRad(coords.lat))+
-                    Math.cos(toRad(location.lat))*Math.cos(toRad(coords.lat))*Math.cos(toRad(location.lat-coords.lat))
-                )*60*1.1515);
+            var dLat = toRad(location.lat-coords.latitude),
+                dLng = toRad(location.lng-coords.longitude),
+                a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(toRad(location.lat)) * Math.cos(toRad(coords.latitude)) *
+                    Math.sin(toRad(dLng)/2) * Math.sin(toRad(dLng)/2),
+                c = 2 * Math.atan(Math.sqrt(a), Math.sqrt(1-a));
+            return 6371 * c;
         },
         withinRadius = function(location, coords, radius) {
             var d = toKm(radius);
@@ -44,29 +44,76 @@
         whereNow = function(locations, options) {
 
             var self = this,
+                userDeclined = false,
                 opts = $.extend({}, this.defaults, options),
                 START_TIME = new Date();
 
+            this.locations = locations;
+            this.locIndex = -1;
+            this.oldLocIndex = -1;
+            this.timeIndex = -1;
+            this.oldTimeIndex = -1;
+            this.changed = false;
+            this.withinRadius = false;
+
             (function getTimeAndPlace() {
+                self.locOldIndex = self.locIndex;
+                self.oldTimeIndex = self.timeIndex;
+                self.changed = false;
                 var suc = function(p) {
-                        var location, timeIndex;
-                        opts.success(self, location, timeIndex);
+                        var location, closest, success = opts.success, now = new Date();
+                        for(var i = 0, l = self.locations.length; i < l; i++) {
+                            var d = calculateDistance(self.locations[i], p.coords);
+                            if( ! closest || d < closest) {
+                                closest = d;
+                                self.locIndex = i;
+                                location = self.locations[i];
+                            }
+                        }
+                        self.withinRadius = withinRadius(location, p.coords, opts.radius);
+                        if(self.withinRadius) {
+                            if(location.success) {
+                                success = location.success;
+                            }
+                            for(i = 0, l = location.times.length; i < l; i++) {
+                                if(location.times[i].start < now && ( ! location.times[i].end || now < location.times[i].end)) {
+                                    self.timeIndex = i;
+                                    continue;
+                                }
+                                break;
+                            }
+                        } else {
+                            self.timeIndex = -1;
+                        }
+                        if(self.timeIndex != self.oldTimeIndex || self.locIndex != self.oldLocIndex) {
+                            self.changed = true;
+                        }
+                        success(self, location);
                         opts.complete(self);
                         if( ! opts.stopAt || START_TIME < opts.stopAt) {
                             t = setTimeout(getTimeAndPlace, opts.delay);
                         }
                     },
                     fail = function(e) {
+                        if(e.code == 1) {
+                            userDeclined = true;
+                        }
                         opts.error(e, self);
                         opts.complete(self);
                         if( ! opts.stopAt || START_TIME < opts.stopAt) {
                             t = setTimeout(getTimeAndPlace, opts.delay);
                         }
                     };
-                if( !!navigator.geolocation) {
+                if(userDeclined || !!navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(suc, fail);
                 } else {
-                    fail({code: 4, message: 'Geolocation not available'});
+                    fail(userDeclined ? {
+                        code: 1,
+                        message: 'The method failed to retrieve the location of the device because the application does not have permission to use the Location Service.'
+                    } : {
+                        code: 4,
+                        message: 'Geolocation not available.'
+                    });
                 }
             })();
 
@@ -79,8 +126,19 @@
         api: null,
         stopAt: null,
         complete: function(whereNow) {},
-        success: function(whereNow, location, timeIndex) {},
+        success: function(whereNow, location) {},
         error: function(error, whereNow) {}
+    };
+
+    // Allows for repetitive time by return a specific time on the current day
+    // Mainly for setting times in the locations object
+    $.whereNow.todayAt = whereNow.prototype.todayAt = function(hr, min, sec, ms) {
+        var date = new Date(),
+            parts = ['Hours', 'Minutes', 'Seconds', 'Milliseconds'];
+        for(var i = 0, l = arguments.length; i < l; i++) {
+            date['set'+parts[i]](arguments[i]);
+        }
+        return date;
     };
 
     // static instance. We don't want this running more than once.
