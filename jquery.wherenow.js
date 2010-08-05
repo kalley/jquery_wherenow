@@ -54,6 +54,13 @@
             this.changed = false;
             this.withinRadius = false;
 
+            this.options = function(option, value) {
+                if(value) {
+                    opts[option] = value;
+                }
+                return opts[option];
+            };
+
             (function getTimeAndPlace() {
                 self.locOldIndex = self.locIndex;
                 self.oldTimeIndex = self.timeIndex;
