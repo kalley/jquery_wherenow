@@ -65,8 +65,9 @@
                 self.locOldIndex = self.locIndex;
                 self.oldTimeIndex = self.timeIndex;
                 self.changed = false;
-                var suc = function(p) {
-                        var location, closest, success = opts.success, now = new Date();
+                var now = new Date(),
+                    suc = function(p) {
+                        var location, closest, success = opts.success;
                         for(var i = 0, l = self.locations.length; i < l; i++) {
                             var d = calculateDistance(self.locations[i], p.coords);
                             if( ! closest || d < closest) {
@@ -98,7 +99,7 @@
                         }
                         success(self, location);
                         opts.complete(self);
-                        if( ! opts.stopAt || START_TIME < opts.stopAt) {
+                        if( ! opts.stopAt || now < opts.stopAt) {
                             t = setTimeout(getTimeAndPlace, opts.delay);
                         }
                     },
@@ -108,7 +109,7 @@
                         }
                         opts.error(e, self);
                         opts.complete(self);
-                        if( ! opts.stopAt || START_TIME < opts.stopAt) {
+                        if( ! opts.stopAt || now < opts.stopAt) {
                             t = setTimeout(getTimeAndPlace, opts.delay);
                         }
                     };
