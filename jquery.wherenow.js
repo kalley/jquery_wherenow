@@ -90,6 +90,9 @@
                         } else {
                             self.timeIndex = -1;
                         }
+                        if(location.times[self.timeIndex].success) {
+                            success = location.times[self.timeIndex].success;
+                        }
                         if(self.timeIndex != self.oldTimeIndex || self.locIndex != self.oldLocIndex) {
                             self.changed = true;
                         }

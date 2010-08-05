@@ -24,7 +24,7 @@ encourages and enables a greater flexibility in use.
                     start: new Date('2010-08-26 13:00:00'),
                     // optional, and used by the plugin
                     end: new Date('2010-08-26 14:00:00'),
-                    success: function(whereNow, coordinates) {}, // This overwrites the location success method
+                    success: function(whereNow, location) {}, // This overwrites the location success method
                     // now, whatever else you want
                     name: 'Session 1'
                 },
@@ -36,7 +36,7 @@ encourages and enables a greater flexibility in use.
             ],
             // optional
             // This will be used if there is not a success method in the times object
-            success: function(whereNow, coordinates) {}
+            success: function(whereNow, location) {}
         }, {...}
     ];
 
