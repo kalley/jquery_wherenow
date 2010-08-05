@@ -10,8 +10,6 @@
 
     var navigator = window.navigator;
 
-    $.support.geolocation = navigator.geolocation;
-
     $.whereNow = function(coords, agenda, options, resetInstance) {
         return whereNow.instance(coords, agenda, options, resetInstance);
     };
