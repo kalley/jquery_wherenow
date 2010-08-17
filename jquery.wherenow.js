@@ -134,7 +134,7 @@
         api: null,
         stopAt: null,
         complete: function(whereNow) {},
-        success: function(whereNow, location) {},
+        success: function(whereNow, location, currentCoordinates) {},
         error: function(error, whereNow) {}
     };
 

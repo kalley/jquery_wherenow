@@ -53,7 +53,7 @@ encourages and enables a greater flexibility in use.
         // gets called after everything is complete
         complete: function(whereNow) {},
         // only gets called if not defined within a specific location
-        success: function(whereNow, location) {},
+        success: function(whereNow, location, currentCoordinates) {},
         // gets called on error, with the error from the API
         error: function(error, whereNow) {}
     });
