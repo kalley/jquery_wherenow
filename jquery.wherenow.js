@@ -43,18 +43,18 @@
 
             var self = this,
                 userDeclined = false,
-                opts = $.extend({}, this.defaults, options),
+                opts = $.extend({}, self.defaults, options),
                 START_TIME = new Date();
 
-            this.locations = locations;
-            this.locIndex = -1;
-            this.oldLocIndex = -1;
-            this.timeIndex = -1;
-            this.oldTimeIndex = -1;
-            this.changed = false;
-            this.withinRadius = false;
+            self.locations = locations;
+            self.locIndex = -1;
+            self.oldLocIndex = -1;
+            self.timeIndex = -1;
+            self.oldTimeIndex = -1;
+            self.changed = false;
+            self.withinRadius = false;
 
-            this.options = function(option, value) {
+            self.options = function(option, value) {
                 if(value) {
                     opts[option] = value;
                 }
@@ -62,8 +62,9 @@
             };
 
             (function getTimeAndPlace() {
-                self.locOldIndex = self.locIndex;
+                self.oldLocIndex = self.locIndex;
                 self.oldTimeIndex = self.timeIndex;
+                self.timeIndex = -1;
                 self.changed = false;
                 var now = new Date(),
                     suc = function(p) {
@@ -88,16 +89,14 @@
                                 }
                                 break;
                             }
-                        } else {
-                            self.timeIndex = -1;
                         }
-                        if(location.times[self.timeIndex].success) {
+                        if(self.timeIndex != -1 && location.times[self.timeIndex].success) {
                             success = location.times[self.timeIndex].success;
                         }
                         if(self.timeIndex != self.oldTimeIndex || self.locIndex != self.oldLocIndex) {
                             self.changed = true;
                         }
-                        success(self, location);
+                        success(self, location, p.coords);
                         opts.complete(self);
                         if( ! opts.stopAt || now < opts.stopAt) {
                             t = setTimeout(getTimeAndPlace, opts.delay);
